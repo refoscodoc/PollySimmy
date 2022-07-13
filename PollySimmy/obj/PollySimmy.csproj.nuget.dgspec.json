@@ -1,0 +1,96 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/alberto/Documents/C Sharp/PollySimmy/PollySimmy/PollySimmy/PollySimmy.csproj": {}
+  },
+  "projects": {
+    "/home/alberto/Documents/C Sharp/PollySimmy/PollySimmy/PollySimmy/PollySimmy.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/alberto/Documents/C Sharp/PollySimmy/PollySimmy/PollySimmy/PollySimmy.csproj",
+        "projectName": "PollySimmy",
+        "projectPath": "/home/alberto/Documents/C Sharp/PollySimmy/PollySimmy/PollySimmy/PollySimmy.csproj",
+        "packagesPath": "/home/alberto/.nuget/packages/",
+        "outputPath": "/home/alberto/Documents/C Sharp/PollySimmy/PollySimmy/PollySimmy/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/alberto/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {},
+          "https://www.myget.org/F/avalonia-ci/api/v2": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "dependencies": {
+            "MediatR": {
+              "target": "Package",
+              "version": "[10.0.1, )"
+            },
+            "MediatR.Extensions.Microsoft.DependencyInjection": {
+              "target": "Package",
+              "version": "[10.0.1, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[6.0.7, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[6.0.6, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[6.0.7, )"
+            },
+            "Pomelo.EntityFrameworkCore.MySql": {
+              "target": "Package",
+              "version": "[6.0.1, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[6.2.3, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/6.0.102/RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
