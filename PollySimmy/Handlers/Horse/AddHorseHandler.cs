@@ -20,7 +20,8 @@ public class AddHorseHandler : IRequestHandler<AddHorseCommand, Models.Horse>
             Id = Guid.NewGuid(),
             Name = request.Name,
             Age = 0,
-            Price = 100
+            Price = 100,
+            HorseJoke = request.HorseJoke
         };
         
         await _context.HorseTable.AddAsync(newHorse);

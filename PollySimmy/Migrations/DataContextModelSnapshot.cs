@@ -29,7 +29,6 @@ namespace PollySimmy.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("HorseJoke")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Name")
@@ -55,7 +54,6 @@ namespace PollySimmy.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Motto")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Name")

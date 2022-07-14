@@ -64,3 +64,8 @@
 /home/alberto/Documents/C Sharp/PollySimmy/PollySimmy/PollySimmy/bin/Debug/net6.0/MediatR.dll
 /home/alberto/Documents/C Sharp/PollySimmy/PollySimmy/PollySimmy/bin/Debug/net6.0/MediatR.Contracts.dll
 /home/alberto/Documents/C Sharp/PollySimmy/PollySimmy/PollySimmy/bin/Debug/net6.0/MediatR.Extensions.Microsoft.DependencyInjection.dll
+/home/alberto/Documents/C Sharp/PollySimmy/PollySimmy/PollySimmy/bin/Debug/net6.0/Newtonsoft.Json.dll
+/home/alberto/Documents/C Sharp/PollySimmy/PollySimmy/PollySimmy/bin/Debug/net6.0/Polly.dll
+/home/alberto/Documents/C Sharp/PollySimmy/PollySimmy/PollySimmy/bin/Debug/net6.0/Microsoft.Extensions.Http.Polly.dll
+/home/alberto/Documents/C Sharp/PollySimmy/PollySimmy/PollySimmy/bin/Debug/net6.0/Polly.Contrib.Simmy.dll
+/home/alberto/Documents/C Sharp/PollySimmy/PollySimmy/PollySimmy/bin/Debug/net6.0/Polly.Extensions.Http.dll

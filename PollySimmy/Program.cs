@@ -1,10 +1,21 @@
+using System.Net.Sockets;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using PollySimmy.DataAccess;
 using MediatR;
+using Polly.Contrib.Simmy;
+using Polly.Contrib.Simmy.Outcomes;
 
 var builder = WebApplication.CreateBuilder(args);
 
+AsyncInjectOutcomePolicy<HttpResponseMessage> faultPolicy = MonkeyPolicy.InjectFaultAsync<HttpResponseMessage>(
+    new HttpRequestException("Simmy threw an exception"), 
+    injectionRate: .25,
+    enabled: () => true
+);
+
+builder.Services.AddSingleton(faultPolicy);
+//builder.Services.AddSingleton<SocketException>();
 builder.Services.AddHttpClient();
 builder.Services.AddMediatR(Assembly.GetExecutingAssembly());
 
@@ -28,7 +39,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 app.UseAuthorization();
 

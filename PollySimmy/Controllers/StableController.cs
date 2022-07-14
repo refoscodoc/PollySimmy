@@ -55,7 +55,7 @@ public class StableController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(new ArgumentNullException());
         
-        var response = _client.GetStringAsync("https://localhost:7154/RandomWord");
+        var response = _client.GetStringAsync("http://localhost:5123/RandomWord");
         var motto = await response;
         
         var result = await _mediator.Send(newStable with {Id = Guid.NewGuid(), Motto = motto});

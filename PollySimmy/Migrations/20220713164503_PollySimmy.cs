@@ -21,7 +21,7 @@ namespace PollySimmy.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Price = table.Column<int>(type: "int", nullable: false),
                     Age = table.Column<int>(type: "int", nullable: false),
-                    HorseJoke = table.Column<string>(type: "longtext", nullable: false)
+                    HorseJoke = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
@@ -40,7 +40,7 @@ namespace PollySimmy.Migrations
                     Address = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Phone = table.Column<int>(type: "int", nullable: false),
-                    Motto = table.Column<string>(type: "longtext", nullable: false)
+                    Motto = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>

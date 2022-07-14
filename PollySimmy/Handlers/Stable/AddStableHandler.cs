@@ -20,7 +20,8 @@ public class AddStableHandler : IRequestHandler<AddStableCommand, Models.Stable>
             Id = Guid.NewGuid(),
             Name = request.Name,
             Phone = request.Phone,
-            Address = request.Address
+            Address = request.Address,
+            Motto = request.Motto
         };
         
         await _context.StableTable.AddAsync(newStable);

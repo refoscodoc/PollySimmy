@@ -11,7 +11,7 @@ using PollySimmy.DataAccess;
 namespace PollySimmy.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20220713111308_PollySimmy")]
+    [Migration("20220713164503_PollySimmy")]
     partial class PollySimmy
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -31,7 +31,6 @@ namespace PollySimmy.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("HorseJoke")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Name")
@@ -57,7 +56,6 @@ namespace PollySimmy.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Motto")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Name")
