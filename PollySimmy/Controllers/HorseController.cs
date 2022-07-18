@@ -60,7 +60,10 @@ public class HorseController : ControllerBase
 
         _circuitBreaker = Policy.HandleResult<HttpResponseMessage>(
                 msg => ((int)msg.StatusCode == 503) || !msg.IsSuccessStatusCode)
-            .CircuitBreakerAsync(2, TimeSpan.FromSeconds(15));
+            .CircuitBreakerAsync(3, TimeSpan.FromSeconds(15),
+                onBreak: (_, duration) => Console.WriteLine($"Circuit tripped. Circuit is open and requests won't be allowed through for duration={duration}"),
+                onReset: () => Console.WriteLine("Circuit closed. Requests are now allowed through"),
+                onHalfOpen: () => Console.WriteLine("Circuit is now half-opened and will test the service with the next request"));
         
         // _circuitBreakerAdvanced = Policy
         //     .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
@@ -146,9 +149,8 @@ public class HorseController : ControllerBase
     public async Task<IActionResult> GetAllCircuitBreaker()
     {
         var httpClient = _baconClient.CreateClient("BaconService");
-        CircuitState breakerState = _circuitBreaker.CircuitState;
         
-        AsyncPolicyWrap<HttpResponseMessage> pollyCircuitBreakerWrap = Policy.WrapAsync(_retryPolicy, _fallbackPolicy, _circuitBreaker);
+        AsyncPolicyWrap<HttpResponseMessage> pollyCircuitBreakerWrap = Policy.WrapAsync(_fallbackPolicy, _retryPolicy, _circuitBreaker);
 
         #region SimmyPolicies
 
@@ -169,14 +171,14 @@ public class HorseController : ControllerBase
         #endregion
 
         Console.WriteLine("Fetching data..");
-        var resulting = pollyCircuitBreakerWrap.ExecuteAsync(() => _retryPolicy.ExecuteAsync(async () => chaosPolicy.ExecuteAsync(async () =>
+        var resulting = _retryPolicy.WrapAsync(_circuitBreaker).ExecuteAsync(async () => chaosPolicy.ExecuteAsync(async () =>
         {
-            if (breakerState == CircuitState.Open)
+            if (_circuitBreaker.CircuitState == CircuitState.Open)
             {
                 throw new Exception("The service is currently unavailable");
             }
             return await httpClient.GetAsync("?type=meat-and-filler/");
-        }).Result));
+        }).Result);
                 
         return Ok(resulting.Result.StatusCode);
     }
