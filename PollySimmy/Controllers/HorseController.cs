@@ -7,6 +7,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 using Newtonsoft.Json;
 using Polly;
 using Polly.CircuitBreaker;
@@ -15,8 +16,11 @@ using Polly.Contrib.Simmy.Latency;
 using Polly.Contrib.Simmy.Outcomes;
 using Polly.Fallback;
 using Polly.Retry;
+using Polly.Wrap;
 using PollySimmy.Commands;
+using PollySimmy.Models;
 using PollySimmy.Queries;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace PollySimmy.Controllers;
 
@@ -24,27 +28,59 @@ namespace PollySimmy.Controllers;
 [Route("[controller]")]
 public class HorseController : ControllerBase
 {
-    private readonly AsyncRetryPolicy _fallbackPolicy;
-    private readonly AsyncCircuitBreakerPolicy<HttpResponseMessage> _circuitBreaker;
+    private readonly AsyncRetryPolicy _retryForeverPolicy;
+    private readonly AsyncRetryPolicy<HttpResponseMessage> _retryPolicy;
     private readonly AsyncInjectOutcomePolicy<HttpResponseMessage> _faultPolicy;
+    private readonly AsyncInjectOutcomePolicy<HttpResponseMessage> _wrappedPolicy;
+    private readonly AsyncCircuitBreakerPolicy<HttpResponseMessage> _circuitBreaker;
+    // private readonly AsyncCircuitBreakerPolicy<HttpResponseMessage> _circuitBreakerAdvanced;
+    private readonly AsyncFallbackPolicy<HttpResponseMessage> _fallbackPolicy;
     private readonly IMediator _mediator;
     private readonly HttpClient _client;
+    private readonly IHttpClientFactory _baconClient;
 
-    public HorseController(IMediator mediator, IHttpClientFactory clientFactory, AsyncInjectOutcomePolicy<HttpResponseMessage> faultPolicy)
+    public HorseController(IMediator mediator, 
+        IHttpClientFactory clientFactory, 
+        AsyncInjectOutcomePolicy<HttpResponseMessage> faultPolicy, 
+        IHttpClientFactory baconClient, 
+        AsyncInjectOutcomePolicy<HttpResponseMessage> wrappedPolicy)
     {
-        _fallbackPolicy = Policy
+        _retryPolicy = Policy.HandleResult<HttpResponseMessage>(
+                msg => !msg.IsSuccessStatusCode)
+            .WaitAndRetryAsync(10, attempt =>
+            {
+                Console.WriteLine(($"Retrying due to an error. Attempt {attempt}"));
+                return TimeSpan.FromSeconds(Math.Pow(2, attempt)) + TimeSpan.FromMilliseconds(1000);
+            });
+        
+        _retryForeverPolicy = Policy
             .Handle<Exception>()
             .WaitAndRetryForeverAsync(
             attempt => TimeSpan.FromMilliseconds(200), (exception, waitDuration) => Console.WriteLine($"Something went wrong: {exception}. Waiting {waitDuration}ms."));
+
+        _circuitBreaker = Policy.HandleResult<HttpResponseMessage>(
+                msg => ((int)msg.StatusCode == 503) || !msg.IsSuccessStatusCode)
+            .CircuitBreakerAsync(2, TimeSpan.FromSeconds(15));
         
-        _circuitBreaker = Policy
-            .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-            .AdvancedCircuitBreakerAsync(0.25, TimeSpan.FromSeconds(60), 7, TimeSpan.FromSeconds(30));
-        
+        // _circuitBreakerAdvanced = Policy
+        //     .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
+        //     .AdvancedCircuitBreakerAsync(3, TimeSpan.FromSeconds(15), 7, TimeSpan.FromSeconds(30));
+
+        _fallbackPolicy = Policy
+            .HandleResult<HttpResponseMessage>(msg => !msg.IsSuccessStatusCode)
+            .FallbackAsync(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable),
+                d =>
+                {
+                    Console.WriteLine("Unavailable. Retrying again later.");
+                    return Task.CompletedTask;
+                });
+
         _faultPolicy = faultPolicy;
+        _wrappedPolicy = wrappedPolicy;
         
         _mediator = mediator;
         _client = clientFactory.CreateClient();
+        _baconClient = baconClient;
     }
 
     [HttpGet("{id}")]
@@ -97,12 +133,52 @@ public class HorseController : ControllerBase
         
         if (response.IsSuccessStatusCode)
         {
-            var breweries = await response.Content.ReadAsStringAsync();
-            var breweriesList = JsonConvert.DeserializeObject<dynamic>(breweries);
-            return Ok(breweriesList.ToString());
+            var horsies = await response.Content.ReadAsStringAsync();
+            var horsiesList = JsonConvert.DeserializeObject<dynamic>(horsies);
+            return Ok(horsiesList.ToString());
         }
 
         return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+    }
+
+    [HttpGet]
+    [Route("CircuitBreaker")]
+    public async Task<IActionResult> GetAllCircuitBreaker()
+    {
+        var httpClient = _baconClient.CreateClient("BaconService");
+        CircuitState breakerState = _circuitBreaker.CircuitState;
+        
+        AsyncPolicyWrap<HttpResponseMessage> pollyCircuitBreakerWrap = Policy.WrapAsync(_retryPolicy, _fallbackPolicy, _circuitBreaker);
+
+        #region SimmyPolicies
+
+        var result = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+        AsyncInjectOutcomePolicy<HttpResponseMessage> chaosPolicy = MonkeyPolicy.InjectResultAsync<HttpResponseMessage>(
+            with =>             
+                with.Result(result)
+                .InjectionRate(1)
+                .Enabled()
+        );
+        
+        var chaosLatencyPolicy = MonkeyPolicy.InjectLatencyAsync(with =>
+            with.Latency(TimeSpan.FromSeconds(2))
+                .InjectionRate(1)
+                .Enabled()
+        );
+
+        #endregion
+
+        Console.WriteLine("Fetching data..");
+        var resulting = pollyCircuitBreakerWrap.ExecuteAsync(() => _retryPolicy.ExecuteAsync(async () => chaosPolicy.ExecuteAsync(async () =>
+        {
+            if (breakerState == CircuitState.Open)
+            {
+                throw new Exception("The service is currently unavailable");
+            }
+            return await httpClient.GetAsync("?type=meat-and-filler/");
+        }).Result));
+                
+        return Ok(resulting.Result.StatusCode);
     }
 
     [HttpPost]
@@ -117,7 +193,7 @@ public class HorseController : ControllerBase
             return BadRequest(new ArgumentNullException());
 
         string response = "";
-        await _fallbackPolicy.ExecuteAsync(async () => response = await _client.GetStringAsync("http://localhost:5111/RandomJoke"));
+        await _retryForeverPolicy.ExecuteAsync(async () => response = await _client.GetStringAsync("http://localhost:5111/RandomJoke"));
 
         var joke = JsonConvert.DeserializeObject<dynamic>(response);
 
